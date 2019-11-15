@@ -1,30 +1,138 @@
 ---
-title: "ESM 206 Assignmnet 4"
+title: "California Spiny Lobster Abundance"
+subtitle: "Prepared for ESM 206" 
 author: "Margaret Brickner"
-date: "11/13/2019"
+date: "11/18/2019"
 output: html_document
 ---
 
+### Introduction
+
+
+### Data and Methods
+
+
+### Results
+
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(echo = FALSE)
+
+library(tidyverse)
+library(janitor)
+library(plotly)
+library(DT)
+
+# Read in the data frame. After viewing the data frame, -99999 indicates an NA value, so correct that. 
+
+lobster_abundance <- read_csv("lobster_abundance_sbc_lter.csv", 
+                              na = "-99999")
+
+# Next to tidy up the data in other ways. We used this data in lab 5, but the data is a little tidier here. The dat is already in ISO formant and already already classed as a date. For now I'm just going to clean the names and uncount the observations. 
+
+lobster_tidy <- lobster_abundance %>% 
+  janitor::clean_names() %>% 
+  tidyr::uncount(count) 
+
 ```
 
-## R Markdown
+#### A. Changes in Lobster Abundance by Site
+```{r}
 
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
 
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+ggplot(data = lobster_tidy, aes(x = year)) +
+  geom_histogram(binwidth = 1.0, show.legend = FALSE) +
+  theme_bw()+
+  theme(axis.line = element_line(color = "black"), 
+        panel.border = element_rect(fill = NA, 
+                                    color = NA)) +
+  scale_y_continuous(breaks = seq(0,1000, by = 100),
+                     expand = c(0,0),
+                     limits = c(0,1200)) +
+  scale_x_continuous(breaks = seq(2011.5, 2018.5, 
+                                  by = 1),
+                     expand = c(0,0), 
+                     limits = c(2011, 2018.75)) +
+  labs(title = "Effects of MPAs on Lobster Population", 
+       subtitle = "2012-2018",
+       x = "Year", 
+       y = "Count") +
+  theme(panel.grid.major.x = element_blank(),
+        plot.title = element_text(size = 15, 
+                                  face = 3, 
+                                  vjust = 1),
+        strip.text.x = element_text(size = 12, 
+                                    color = "black"),
+        legend.position = "none") + 
+  facet_wrap(~site, 
+             nrow = 2, 
+             scales = "free")
 
-```{r cars}
-summary(cars)
+```
+```{r}
+
+# I want to plot that to show visually what the abundance at each site looks like over time. 
+
+
+#I also want to try to rename the different sites with their true name. Added a new column site_name with the unabbreviated name and then wrapped based on that.  
+
+
+lobster_site <- lobster_tidy %>% 
+  group_by(year) %>% 
+ mutate(site_name = ifelse(site == "AQUE", "Arroyo Quemado", ifelse(site == "CARP", "Carpinteria", ifelse(site == "IVEE", "Isla Vista", ifelse(site == "MOHK", "Mohawk","Naples")))))
+ 
+# I then wanted to emphasize which locations were in MPAs
+colors_count <- c("Arroyo Quemado" = "gray61", "Carpinteria" = "gray61", "Isla Vista" = "lightseagreen", "Mohawk" = "gray61", "Naples" = "lightseagreen")
+
+
+ggplot(data = lobster_site, aes(x = year)) +
+  geom_histogram(binwidth = 1.0) +
+  theme_bw() +
+  scale_y_continuous(limits = c(0,1000), 
+                     breaks = seq(0,1000, by = 100),
+                     expand = c(0,0)) + 
+  scale_x_continuous(limits = c(2011.5,2018.5), 
+                                breaks = seq(2012,2018, 
+                                  by = 1), 
+                     expand = c(0,0)) +
+  labs(title = "Effects of MPAs on Lobster Population", 
+       subtitle = "2012-2018",
+       x = "Year", 
+       y = "Count") +
+  theme(panel.grid.minor.x = element_blank(), 
+        panel.grid.minor.y = element_blank()) + 
+  facet_wrap(~site_name, 
+             nrow = 2, 
+             scales = "free")
+```
+#### B. Shifts in Lobster Size Distribution
+
+```{r}
+# Next we want to tract the lobster size distribution and compare the size distribution in 2012 vs 2018. To do this we want to filter observations for only the years 2012 and 2018. 
+
+years <- c("2012","2018")
+
+factor(years)
+
+lobster_size <- lobster_tidy %>% 
+  filter(year == 2012 | year == 2018)%>% 
+ mutate(site_name = ifelse(site == "AQUE", "Arroyo Quemado", ifelse(site == "CARP", "Carpinteria", ifelse(site == "IVEE", "Isla Vista", ifelse(site == "MOHK", "Mohawk","Naples"))))) %>% 
+  mutate(year = as.character(year))
+  
+
+
+ggplot(data = lobster_size, aes(x = size_mm, group = year, color = year)) +
+  geom_density() +
+  theme_bw() +
+  labs(title = "Lobster Size", subtitle = "2012 vs. 2018", x = "Length (mm)", y = "Density") +
+  theme(panel.grid.minor.x = element_blank(), 
+        panel.grid.minor.y = element_blank(), 
+        legend.title = element_blank()) +
+  facet_wrap(~site_name)
 ```
 
-## Including Plots
+### Summary
 
-You can also embed plots, for example:
 
-```{r pressure, echo=FALSE}
-plot(pressure)
-```
+### References 
 
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+Reed D. 2019. SBC LTER: Reef: Abundance, size and fishing effort for California Spiny Lobster (Panulirus interruptus), ongoing since 2012. Environmental Data Initiative. https://doi.org/10.6073/pasta/a593a675d644fdefb736750b291579a0. Dataset accessed 10/30/2019.
