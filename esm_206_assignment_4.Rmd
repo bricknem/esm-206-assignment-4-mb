@@ -6,6 +6,7 @@ date: "11/18/2019"
 output: html_document
 ---
 
+
 ### Introduction
 
 
@@ -21,6 +22,7 @@ library(tidyverse)
 library(janitor)
 library(plotly)
 library(DT)
+library(kableExtra)
 
 # Read in the data frame. After viewing the data frame, -99999 indicates an NA value, so correct that. 
 
@@ -36,7 +38,7 @@ lobster_tidy <- lobster_abundance %>%
 ```
 
 #### A. Changes in Lobster Abundance by Site
-```{r}
+```{r, include = FALSE}
 
 
 ggplot(data = lobster_tidy, aes(x = year)) +
@@ -109,10 +111,6 @@ ggplot(data = lobster_site, aes(x = year)) +
 ```{r}
 # Next we want to tract the lobster size distribution and compare the size distribution in 2012 vs 2018. To do this we want to filter observations for only the years 2012 and 2018. 
 
-years <- c("2012","2018")
-
-factor(years)
-
 lobster_size <- lobster_tidy %>% 
   filter(year == 2012 | year == 2018)%>% 
  mutate(site_name = ifelse(site == "AQUE", "Arroyo Quemado", ifelse(site == "CARP", "Carpinteria", ifelse(site == "IVEE", "Isla Vista", ifelse(site == "MOHK", "Mohawk","Naples"))))) %>% 
@@ -128,6 +126,128 @@ ggplot(data = lobster_size, aes(x = size_mm, group = year, color = year)) +
         panel.grid.minor.y = element_blank(), 
         legend.title = element_blank()) +
   facet_wrap(~site_name)
+```
+
+#### C. Comparing mean lobster size at MPA vs. non-MPA sites in 2012 and 2018
+
+
+```{r}
+#First I want to get my data into a useable shape and make a distinction between MPA and non-MPA in the dataframe. I think I also want to filter for the year 2012 and 2018 now even though I'll have to filter it down more later.  
+
+lobster_mpa_nmpa_2012_2018 <- lobster_tidy %>% 
+  mutate(mpa = ifelse(site == "IVEE" | site == "NAPL", "MPA", "non-MPA")) %>% 
+  filter(year == "2012"| year == "2018")
+
+```
+
+##### 1. Comparing the mean lobster size in 2012 Between MPA and non-MPA areas. The MPA's were established in 01/01/2012 and the 2012 samples were taken starting 08/2012, so really just beginning. 
+
+- H~0~: There is no significant difference in mean lobster size in 2012 between MPA and non-MPA sites. 
+- H~A~: There is a significant difference in mean lobster size in 2012 between MPA and non-MPA sites.
+
+```{r, include = FALSE}
+
+# Since I'm only comparing 2012 data I want to seperate that out first. It should be noted that I'm on the low side of observations for MPA. I have 32 obsevations and usually the CLT requires 30.  
+
+lobster_2012_mpa <- lobster_mpa_nmpa_2012_2018 %>% 
+  filter(year == "2012") %>% 
+  filter(mpa == "MPA")
+
+lobster_2012_nmpa <- lobster_mpa_nmpa_2012_2018 %>% 
+  filter(year == "2012") %>% 
+  filter(mpa == "non-MPA")
+
+# Ok, I should explore these. I alreay have the histograms above, but I should look at the QQ plot too
+
+ggplot(data = lobster_2012_mpa, aes(sample = size_mm)) +
+  geom_qq()
+
+ggplot(data = lobster_2012_nmpa, aes(sample = size_mm)) +
+  geom_qq()
+
+# They looked normally distributed above and the qq plots look pretty linear. I guess we also did this in lab. 
+
+# Ok, now I want to do some testing to see if I reject my null hypothesis or not. 
+
+lobster_2012_test <- t.test(lobster_2012_mpa$size_mm, lobster_2012_nmpa$size_mm)
+
+
+```
+##### 2. For 2018 observations, is there a significant difference in lobster size between MPA and non-MPA sites? 
+
+- H~0~: There is no significant difference in mean lobster size in 2018 between MPA and non-MPA sites. 
+- H~A~: There is a significant difference in mean lobster size in 2018 between MPA and non-MPA sites. 
+
+```{r, include = FALSE}
+# Ok, now that I've looked at 2012 data, now I want to compare the data for MPA and NMPA for 2018. This is after the MPA has been in place 6 years. 
+
+lobster_2018_mpa <- lobster_mpa_nmpa_2012_2018 %>% 
+  filter(year == "2018") %>% 
+  filter(mpa == "MPA")
+
+lobster_2018_nmpa <- lobster_mpa_nmpa_2012_2018 %>% 
+  filter(year == "2018") %>% 
+  filter(mpa == "non-MPA")
+
+# I should look at the QQ plots for these guys too. 
+ggplot(data = lobster_2018_mpa, aes(sample = size_mm)) +
+  geom_qq()
+
+ggplot(data = lobster_2018_nmpa, aes(sample = size_mm)) +
+  geom_qq()
+
+# They look linear as well. 
+
+# Ok, now I want to do some testing to see if I reject my null hypothesis or not. 
+
+lobster_2018_test <- t.test(lobster_2018_mpa$size_mm, lobster_2018_nmpa$size_mm)
+
+```
+
+##### 3. For MPA sites only, is there a significant mean size difference in lobsters observed in 2012 vs. 2018?
+
+- H~0~: There is no significant difference in mean lobster size between 2012 and 2018 at MPA sites. 
+- H~A~: There is a significant difference in mean lobster size between 2012 and 2018 at MPA sites.
+```{r}
+# I think that we already have the correct data frames for these, and we've already confirmed via the QQ plot that they have a linear relationship with another normally distributed dataframe. I think we should be good to go to do a t.test
+
+lobster_mpa_2012_2018_test <- t.test(lobster_2012_mpa$size_mm, lobster_2018_mpa$size_mm)
+
+```
+
+##### 4. For non-MPA sites only, is there a significant mean size difference in lobsters observed in 2012 vs. 2018?
+
+- H~0~: There is no significant difference in mean lobster size between 2012 and 2018 at non-MPA sites.
+- H~A~: There is a significant difference in mean lobster size between 2012 and 2018 at non-MPA sites.
+```{r}
+# And we already have the the dataframes to compare non MPA sites, so we can do another t.test. 
+
+lobster_nmpa_2012_2018_test <- t.test(lobster_2012_nmpa$size_mm, lobster_2018_nmpa$size_mm)
+```
+
+```{r}
+# I have to create a summary table with the mean size_mm and standard deviation size and the sample size in 2012 and 2018 for the two groups: MPA and non-MPA
+
+lobster_summary <- lobster_mpa_nmpa_2012_2018 %>% 
+  group_by(year, mpa) %>% 
+  summarize(
+    mean_size = mean(size_mm, na.rm = TRUE),
+    sd_size = sd(size_mm, na.rm = TRUE),
+    sample_n = n()
+  )
+
+lobster_summary %>% 
+  kable(col.names = c("Year",
+                      "Marine protected area", 
+                      "Mean size (mm)",
+                      "Standard deviation size (mm)", 
+                      "Sample size (n)")) %>% 
+  kable_styling(bootstrap_options = "striped", 
+                full_width = F, 
+                position = "left") %>% 
+  add_header_above(c("Lobster metrics" = 5))
+
+
 ```
 
 ### Summary
