@@ -1,7 +1,7 @@
 ---
 title: "California Spiny Lobster Abundance"
 subtitle: "Prepared for ESM 206" 
-author: "Margaret Brickner"
+author: "Maggie Brickner"
 date: "11/18/2019"
 output: html_document
 ---
@@ -9,9 +9,21 @@ output: html_document
 
 ### Introduction
 
+In 2012 Naples and Isla Vista were both recognized as Marine Protected Areas (MPAs). The California Spiny Lobster (*Panulirus interruptus*) 
+
+The MPA designation does not come with required restrictions, but at both 
+
+The MPA's were established in 01/01/2012 and the 2012 samples were taken starting 08/2012, so really just beginning.
+
+![Figure 1](spiny_lobster_marlinelifephotography.png) 
+![Figure 1](spiny_lobster_areas.png)
+
+***Figure 1.*** *Spiny California lobster (left) and study sites along the Santa Barbara Channel (right).Credit: [Marine Life Photography](https://www.marinelifephotography.com/marine/arthropods/lobsters/panulirus-interruptus.htm) and [EDI Data Portal](https://portal.edirepository.org/nis/mapbrowse?scope=knb-lter-sbc&identifier=77&revision=newest)*
 
 ### Data and Methods
 
+Data was collected by divers. When counting Califorbia Spiny Losters at each survey site divers were also trained to observe and categorize lobsters by carapace size, measured in millameters (mm).
+ 
 
 ### Results
 
@@ -38,38 +50,11 @@ lobster_tidy <- lobster_abundance %>%
 ```
 
 #### A. Changes in Lobster Abundance by Site
-```{r, include = FALSE}
+
+The counts of lobsters observed from 2012 through the most recent available data for 2018. At all sites the count was greater in 2018 than in 2012. The greatest noticeable increase was at the Isla Vista site, where only 26 lobsters were observed in 2012. By 2018 the lobsters were most abundant at the Isla Vista site, with 946 lobsters counted. Divers only observed 6 lobsters in 2012 at the Naples site, the other MPA site designated in 2012. Arroyo Quemado consistently had the lowest counts throughout the observation period. 
 
 
-ggplot(data = lobster_tidy, aes(x = year)) +
-  geom_histogram(binwidth = 1.0, show.legend = FALSE) +
-  theme_bw()+
-  theme(axis.line = element_line(color = "black"), 
-        panel.border = element_rect(fill = NA, 
-                                    color = NA)) +
-  scale_y_continuous(breaks = seq(0,1000, by = 100),
-                     expand = c(0,0),
-                     limits = c(0,1200)) +
-  scale_x_continuous(breaks = seq(2011.5, 2018.5, 
-                                  by = 1),
-                     expand = c(0,0), 
-                     limits = c(2011, 2018.75)) +
-  labs(title = "Effects of MPAs on Lobster Population", 
-       subtitle = "2012-2018",
-       x = "Year", 
-       y = "Count") +
-  theme(panel.grid.major.x = element_blank(),
-        plot.title = element_text(size = 15, 
-                                  face = 3, 
-                                  vjust = 1),
-        strip.text.x = element_text(size = 12, 
-                                    color = "black"),
-        legend.position = "none") + 
-  facet_wrap(~site, 
-             nrow = 2, 
-             scales = "free")
 
-```
 ```{r}
 
 # I want to plot that to show visually what the abundance at each site looks like over time. 
@@ -83,7 +68,7 @@ lobster_site <- lobster_tidy %>%
  mutate(site_name = ifelse(site == "AQUE", "Arroyo Quemado", ifelse(site == "CARP", "Carpinteria", ifelse(site == "IVEE", "Isla Vista", ifelse(site == "MOHK", "Mohawk","Naples")))))
  
 # I then wanted to emphasize which locations were in MPAs
-colors_count <- c("Arroyo Quemado" = "gray61", "Carpinteria" = "gray61", "Isla Vista" = "lightseagreen", "Mohawk" = "gray61", "Naples" = "lightseagreen")
+#colors_count <- c("Arroyo Quemado" = "gray61", "Carpinteria" = "gray61", "Isla Vista" = "lightseagreen", "Mohawk" = "gray61", "Naples" = "lightseagreen"). That did not work out. 
 
 
 ggplot(data = lobster_site, aes(x = year)) +
@@ -101,12 +86,22 @@ ggplot(data = lobster_site, aes(x = year)) +
        x = "Year", 
        y = "Count") +
   theme(panel.grid.minor.x = element_blank(), 
-        panel.grid.minor.y = element_blank()) + 
+        panel.grid.minor.y = element_blank(),
+        axis.text.x = element_text(angle = 270)) + 
   facet_wrap(~site_name, 
              nrow = 2, 
              scales = "free")
+
 ```
+
+***Figure 2.*** *California Spiny Lobster populations at the five survey sites. The Isla Vista and Naples sites are both in Marine Protected Areas (MPAs). These sites were designated as MPAs in 2012. Lobsters surveyed at all sites increased from 2012-2018*
+
+
 #### B. Shifts in Lobster Size Distribution
+
+The observed lobster size distribution at Carpinteria and Mohawk remained relatively stable. At Arroyo Quemado and Naples the size shifted to have a larger mean in 2018 than 2012. At the Isla Vista site the observed size became dramatically larger over the same time period. See *Figure 4* for comparison of the mean lobster size and distribution at MPA and non-MPA sites.
+
+
 
 ```{r}
 # Next we want to tract the lobster size distribution and compare the size distribution in 2012 vs 2018. To do this we want to filter observations for only the years 2012 and 2018. 
@@ -115,7 +110,6 @@ lobster_size <- lobster_tidy %>%
   filter(year == 2012 | year == 2018)%>% 
  mutate(site_name = ifelse(site == "AQUE", "Arroyo Quemado", ifelse(site == "CARP", "Carpinteria", ifelse(site == "IVEE", "Isla Vista", ifelse(site == "MOHK", "Mohawk","Naples"))))) %>% 
   mutate(year = as.character(year))
-  
 
 
 ggplot(data = lobster_size, aes(x = size_mm, group = year, color = year)) +
@@ -128,7 +122,12 @@ ggplot(data = lobster_size, aes(x = size_mm, group = year, color = year)) +
   facet_wrap(~site_name)
 ```
 
-#### C. Comparing mean lobster size at MPA vs. non-MPA sites in 2012 and 2018
+***Figure 3.*** *The distribution of lobster carapace length collected by visual survey. All sites exhibit normal distribution.*
+
+
+#### C. Mean lobster size at MPA vs. non-MPA sites in 2012 and 2018
+
+All site samples followed a normal distribution for bother 2012 and 2018 as shown *Figure 3*. A quantile-quantile plot for each year and for both MPA and non-MPA sites was also produced and exhibited a linear relationship confirming normal distributions. Additionally, each year had a large enough sample size to conduct statistical analysis to infer more about the California Spiny Lobster populations at these sites. 
 
 
 ```{r}
@@ -140,10 +139,12 @@ lobster_mpa_nmpa_2012_2018 <- lobster_tidy %>%
 
 ```
 
-##### 1. Comparing the mean lobster size in 2012 Between MPA and non-MPA areas. The MPA's were established in 01/01/2012 and the 2012 samples were taken starting 08/2012, so really just beginning. 
+###### 1. Mean lobster size comparison in 2012 between MPA and non-MPA areas. 
 
-- H~0~: There is no significant difference in mean lobster size in 2012 between MPA and non-MPA sites. 
-- H~A~: There is a significant difference in mean lobster size in 2012 between MPA and non-MPA sites.
+- H~0~: There is *no* significant difference in mean lobster size in 2012 between MPA and non-MPA sites. 
+- H~A~: There *is* a significant difference in mean lobster size in 2012 between MPA and non-MPA sites.
+
+$\alpha$ = 0.05
 
 ```{r, include = FALSE}
 
@@ -173,10 +174,17 @@ lobster_2012_test <- t.test(lobster_2012_mpa$size_mm, lobster_2012_nmpa$size_mm)
 
 
 ```
+Mean 2012 lobster size (mm) measured at Marine Protected Areas (`r round(lobster_2012_test$estimate[1], 2)`) and non-Marine Protected Areas (`r round(lobster_2012_test$estimate[2], 2)`) differ significantly (t(`r round(lobster_2012_test$parameter, 2)`) = `r round(lobster_2012_test$statistic,2)` *p* = `r round(lobster_2012_test$p.value,3)`).
+
+In 2012 lobsters at non-MPA sites were significantly larger than those at recently established MPA sites. 
+
 ##### 2. For 2018 observations, is there a significant difference in lobster size between MPA and non-MPA sites? 
 
 - H~0~: There is no significant difference in mean lobster size in 2018 between MPA and non-MPA sites. 
 - H~A~: There is a significant difference in mean lobster size in 2018 between MPA and non-MPA sites. 
+
+$\alpha$ = 0.05
+
 
 ```{r, include = FALSE}
 # Ok, now that I've looked at 2012 data, now I want to compare the data for MPA and NMPA for 2018. This is after the MPA has been in place 6 years. 
@@ -204,10 +212,20 @@ lobster_2018_test <- t.test(lobster_2018_mpa$size_mm, lobster_2018_nmpa$size_mm)
 
 ```
 
+
+Mean 2018 lobster size (mm) measured at Marine Protected Areas (`r round(lobster_2018_test$estimate[1], 2)`) and non-Marine Protected Areas (`r round(lobster_2018_test$estimate[2], 2)`) differ significantly (t(`r round(lobster_2018_test$parameter, 2)`) = `r round(lobster_2018_test$statistic,2)` *p* < 0.001).
+
+By 2018, after the MPAs had been established for 8 seasons, lobsters at MPA sites were significantly larger than those at non-MPA sites. The spread in means was much smaller in 2018 than in 2012. 
+
+
 ##### 3. For MPA sites only, is there a significant mean size difference in lobsters observed in 2012 vs. 2018?
 
 - H~0~: There is no significant difference in mean lobster size between 2012 and 2018 at MPA sites. 
 - H~A~: There is a significant difference in mean lobster size between 2012 and 2018 at MPA sites.
+
+$\alpha$ = 0.05
+
+
 ```{r}
 # I think that we already have the correct data frames for these, and we've already confirmed via the QQ plot that they have a linear relationship with another normally distributed dataframe. I think we should be good to go to do a t.test
 
@@ -215,16 +233,27 @@ lobster_mpa_2012_2018_test <- t.test(lobster_2012_mpa$size_mm, lobster_2018_mpa$
 
 ```
 
+
+The mean lobster size (mm) at MPA sites measured in 2012 (`r round(lobster_mpa_2012_2018_test$estimate[1], 2)`) and 2018 (`r round(lobster_mpa_2012_2018_test$estimate[2], 2)`) differs significantly (t(`r round(lobster_mpa_2012_2018_test$parameter, 2)`) = `r round(lobster_mpa_2012_2018_test$statistic, 2)` *p* < 0.001).
+
+
 ##### 4. For non-MPA sites only, is there a significant mean size difference in lobsters observed in 2012 vs. 2018?
 
 - H~0~: There is no significant difference in mean lobster size between 2012 and 2018 at non-MPA sites.
 - H~A~: There is a significant difference in mean lobster size between 2012 and 2018 at non-MPA sites.
+
+$\alpha$ = 0.05
+
+
 ```{r}
 # And we already have the the dataframes to compare non MPA sites, so we can do another t.test. 
 
 lobster_nmpa_2012_2018_test <- t.test(lobster_2012_nmpa$size_mm, lobster_2018_nmpa$size_mm)
 ```
 
+The mean lobster size at non-MPA sites measured in 2012 (`r round(lobster_nmpa_2012_2018_test$estimate[1], 2)`) and 2018 (`r round(lobster_nmpa_2012_2018_test$estimate[2], 2)`) does not differ significantly (t(`r round(lobster_nmpa_2012_2018_test$parameter, 2)`) = `r round(lobster_nmpa_2012_2018_test$statistic, 2)` *p* = `r round(lobster_nmpa_2012_2018_test$p.value, 3)`).
+
+***Figure 4.*** *Comparison of mean lobster size (mm) in 2012 and 2018 at MPA and non-MPA sites. The mean carapace size increased by 10 mm at MPA sites between 2012, when they were first established and 2018. Non-MPA sites did not exhibit the same large increase over that time.*
 ```{r}
 # I have to create a summary table with the mean size_mm and standard deviation size and the sample size in 2012 and 2018 for the two groups: MPA and non-MPA
 
@@ -245,7 +274,7 @@ lobster_summary %>%
   kable_styling(bootstrap_options = "striped", 
                 full_width = F, 
                 position = "left") %>% 
-  add_header_above(c("Lobster metrics" = 5))
+  add_header_above(c("Lobster Metrics" = 5))
 
 
 ```
